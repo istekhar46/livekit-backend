@@ -1,0 +1,21 @@
+{
+  "name": "livekitbackend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon backend/server.js",
+    "server": "node backend/server.js"
+  },
+  "author": "istekhar",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "livekit-server-sdk": "^2.9.4",
+    "nodemon": "^3.1.9"
+  }
+}
