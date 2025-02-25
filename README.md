@@ -21,8 +21,8 @@ This project is a Node.js/Express backend that provides APIs for:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/livekitbackend.git
-   cd livekitbackend
+   git clone https://gitlab.rapidinnovation.tech/root/livekit-call-tmp.git
+   cd folder-name
    ```
 
 2. Install dependencies:
