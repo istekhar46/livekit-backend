@@ -108,8 +108,6 @@ const makeOutboundCall = async (req, res) => {
       clientName ,
     } = req.body;
 
-    console.log(clientName, serviceProvider)
-
     const metadata = {
       type,
       serviceProvider, //organisation-name
@@ -135,8 +133,8 @@ const makeOutboundCall = async (req, res) => {
     }
 
     // Start recording before creating SIP participant
-    // const recording = await startRecording(roomName);
-    // metadata.recordingId = recording.egressId;
+    const recording = await startRecording(roomName);
+    metadata.recordingId = recording.egressId;
 
     const sipParticipantOptions = {
       participantIdentity: `sip-${Date.now()}`,
@@ -158,7 +156,7 @@ const makeOutboundCall = async (req, res) => {
     res.status(201).json({
       participant,
       settings: metadata,
-      // recordingId: recording.egressId,
+      recordingId: recording.egressId,
     });
   } catch (error) {
     console.error("Failed to initiate call:", error);
