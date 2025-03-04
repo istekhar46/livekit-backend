@@ -72,8 +72,6 @@ const createAgent = async (req, res) => {
 
       console.log("Trunk created successfully:", trunk);
 
-      const roomName = `call-${cleanPhoneNumber}-${Date.now()}`;
-
       const dispatchRuleOptions = {
         name: `rule-${cleanPhoneNumber}`,
         trunkIds: [trunk.sipTrunkId],

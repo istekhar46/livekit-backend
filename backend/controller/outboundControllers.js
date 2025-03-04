@@ -103,17 +103,17 @@ const makeOutboundCall = async (req, res) => {
       phoneNumber,
       roomName,
       dtmf,
-      model = "GPT-4",
-      voice = "nova",
-      prompt = "",
-      temperature = 0.5,
+      type = "outbound",
+      serviceProvider,
+      clientName ,
     } = req.body;
 
+    console.log(clientName, serviceProvider)
+
     const metadata = {
-      model,
-      voice,
-      prompt,
-      temperature,
+      type,
+      serviceProvider, //organisation-name
+      clientName,
     };
 
     // Create or update room with proper error handling
@@ -135,8 +135,8 @@ const makeOutboundCall = async (req, res) => {
     }
 
     // Start recording before creating SIP participant
-    const recording = await startRecording(roomName);
-    metadata.recordingId = recording.egressId;
+    // const recording = await startRecording(roomName);
+    // metadata.recordingId = recording.egressId;
 
     const sipParticipantOptions = {
       participantIdentity: `sip-${Date.now()}`,
@@ -158,7 +158,7 @@ const makeOutboundCall = async (req, res) => {
     res.status(201).json({
       participant,
       settings: metadata,
-      recordingId: recording.egressId,
+      // recordingId: recording.egressId,
     });
   } catch (error) {
     console.error("Failed to initiate call:", error);

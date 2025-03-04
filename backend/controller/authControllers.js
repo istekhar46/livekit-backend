@@ -10,6 +10,7 @@ const getToken = async (req, res) => {
   try {
     const { model, voice, prompt } = req.body;
     const roomName = "livekitbot";
+    // const roomName = `call-${cleanPhoneNumber}-${Date.now()}`;
     const participantName = `user-${Math.random().toString(36).substring(7)}`;
 
     const at = new AccessToken(
