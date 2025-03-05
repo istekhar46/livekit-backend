@@ -23,9 +23,6 @@ const egressClient = new EgressClient(
   process.env.LIVEKIT_API_SECRET
 );
 
-// In-memory storage for trunks (replace with database in production)
-let trunks = [];
-
 // Get all trunks
 const listSipOutboundTrunk = async (req, res) => {
   try {
