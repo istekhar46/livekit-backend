@@ -93,6 +93,74 @@ const createSipOutboundTrunk = async (req, res) => {
 };
 
 // Make outbound call
+// const makeOutboundCall = async (req, res) => {
+//   try {
+//     const {
+//       trunkId,
+//       phoneNumber,
+//       roomName,
+//       dtmf,
+//       type = "outbound",
+//       serviceProvider,
+//       clientName ,
+//     } = req.body;
+
+//     const metadata = {
+//       type,
+//       serviceProvider, //organisation-name
+//       clientName,
+//     };
+
+//     // Create or update room with proper error handling
+//     try {
+//       await roomService.createRoom({
+//         name: roomName,
+//         metadata: JSON.stringify(metadata),
+//       });
+//     } catch (error) {
+//       if (error.code === 6) {
+//         // ALREADY_EXISTS
+//         await roomService.updateRoomMetadata(
+//           roomName,
+//           JSON.stringify(metadata)
+//         );
+//       } else {
+//         throw error;
+//       }
+//     }
+
+//     // Start recording before creating SIP participant
+//     const recording = await startRecording(roomName);
+//     metadata.recordingId = recording.egressId;
+
+//     const sipParticipantOptions = {
+//       participantIdentity: `sip-${Date.now()}`,
+//       participantName: "Outbound Call",
+//       playDialtone: true,
+//     };
+
+//     if (dtmf) {
+//       sipParticipantOptions.dtmf = dtmf;
+//     }
+
+//     const participant = await sipClient.createSipParticipant(
+//       trunkId,
+//       phoneNumber,
+//       roomName,
+//       sipParticipantOptions
+//     );
+
+//     res.status(201).json({
+//       participant,
+//       settings: metadata,
+//       recordingId: recording.egressId,
+//     });
+//   } catch (error) {
+//     console.error("Failed to initiate call:", error);
+//     res.status(500).json({ error: "Failed to initiate call" });
+//   }
+// };
+
 const makeOutboundCall = async (req, res) => {
   try {
     const {
@@ -102,13 +170,17 @@ const makeOutboundCall = async (req, res) => {
       dtmf,
       type = "outbound",
       serviceProvider,
-      clientName ,
+      clientName,
+      transferTo, // New parameter for transfer number
+      transferContext // New parameter for transfer context
     } = req.body;
 
     const metadata = {
       type,
-      serviceProvider, //organisation-name
+      serviceProvider,
       clientName,
+      transferTo, // Add transfer number to metadata
+      transferContext // Add transfer context to metadata
     };
 
     // Create or update room with proper error handling
