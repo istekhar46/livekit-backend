@@ -1,5 +1,11 @@
 import { SipClient } from "livekit-server-sdk";
 
+const sipClient = new SipClient(
+  process.env.LIVEKIT_URL,
+  process.env.LIVEKIT_API_KEY,
+  process.env.LIVEKIT_API_SECRET
+);
+
 // Store active agents (in a real application, use a database)
 const activeAgents = new Map();
 
@@ -43,27 +49,19 @@ const createAgent = async (req, res) => {
 
     if (existingTrunk) {
       // If trunk exists, return the existing information
-      const agentInfo = {
-        phoneNumber: cleanPhoneNumber,
-        trunkId: existingTrunk.sipTrunkId,
-        createdAt: new Date(),
-        status: "active",
-        isExisting: true,
-      };
-
-      return res.status(200).json({
+      sipClient.deleteSipTrunk(existingTrunk.sipTrunkId);
+      res.status(200).json({
         success: true,
-        agent: agentInfo,
-        roomId: `call-${cleanPhoneNumber}-${Date.now()}`,
-        message: "Agent trunk already exists",
+        trunk_id: existingTrunk.sipTrunkId,
       });
+      return;
     }
 
     // If trunk doesn't exist, create new trunk
     try {
       const trunk = await sipClient.createSipInboundTrunk(
         `trunk-${cleanPhoneNumber}`,
-        [cleanPhoneNumber],
+        ["+19783213318"],
         {
           auth_username: authUsername,
           auth_password: authPassword,
@@ -127,4 +125,44 @@ const createAgent = async (req, res) => {
   }
 };
 
-export { createAgent };
+const createInboundTrunk = async (req, res) => {
+  try {
+    const { name, number } = req.body;
+
+    const numbers = [number];
+
+    const trunkOptions = {
+      krispEnabled: true,
+    };
+
+    const trunk = await sipClient.createSipInboundTrunk(
+      name,
+      numbers,
+      trunkOptions
+    );
+
+    res.status(201).json(trunk);
+  } catch (error) {
+    console.error("Failed to create trunk:", error);
+    res.status(500).json({ error: "Failed to create trunk" });
+  }
+};
+
+const listAllInboundTrunks = async (req, res) => {
+  try {
+    const sipClient = new SipClient(
+      process.env.LIVEKIT_URL,
+      process.env.LIVEKIT_API_KEY,
+      process.env.LIVEKIT_API_SECRET
+    );
+
+    const trunks = await sipClient.listSipInboundTrunk();
+
+    res.status(200).json(trunks);
+  } catch (error) {
+    console.error("Failed to list trunks:", error);
+    res.status(500).json({ error: "Failed to list trunks" });
+  }
+};
+
+export { createAgent, createInboundTrunk, listAllInboundTrunks };

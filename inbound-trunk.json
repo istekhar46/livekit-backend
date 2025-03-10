@@ -1,0 +1,7 @@
+{
+    "trunk": {
+      "name": "Test inbound trunk",
+      "auth_username": "livekit-ri",
+      "auth_password": "P@$$w0rD@6942"
+    }
+  }
