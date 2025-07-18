@@ -7,7 +7,7 @@ dotenv.config();
 const router = express.Router();
 
 // Get all trunks
-router.get("/api/trunks", listSipOutboundTrunk);
+router.get("/api/list-outboundtrunks", listSipOutboundTrunk);
 
 // Delete trunk
 router.get("/api/deleteTrunk/:id", deleteSipTrunk);

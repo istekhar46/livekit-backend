@@ -1,5 +1,5 @@
 import express from 'express';
-import { createAgent, createInboundTrunk, listAllInboundTrunks } from '../controller/testAgentControllers.js';
+import { createAgent, createInboundTrunk, deleteInboundTrunk, listAllInboundTrunks, createDispatchRule } from '../controller/testAgentControllers.js';
 
 const router = express.Router();
 
@@ -8,5 +8,7 @@ const router = express.Router();
 router.post('/create-agent', createAgent);
 router.post('/create-inboundtrunks', createInboundTrunk);
 router.get('/list-inboudtrunks', listAllInboundTrunks);
+router.post("/delete-inboundtrunks/:trunkId", deleteInboundTrunk);
+router.post('/create-dispatch-rule', createDispatchRule);
 
 export default router;

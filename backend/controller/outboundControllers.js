@@ -65,25 +65,28 @@ const createSipOutboundTrunk = async (req, res) => {
       });
     }
 
+    // Trunk options
+    const trunkOptions = {
+      auth_username: username,
+      auth_password: password
+    };
+    console.log(address, number, trunkOptions)
     const trunk = await sipClient.createSipOutboundTrunk(
       name,
       address,
       [number],
-      {
-        auth_username: username,
-        auth_password: password,
-      }
+      trunkOptions
     );
 
     console.log("Trunk created:", trunk);
 
     // Store trunk info
-    trunks.push({
-      id: trunk.sid,
-      name: trunk.name,
-      address: trunk.address,
-      number: trunk.numbers[0],
-    });
+    // trunks.push({
+    //   id: trunk.sid,
+    //   name: trunk.name,
+    //   address: trunk.address,
+    //   number: trunk.numbers[0],
+    // });
 
     res.status(201).json(trunk);
   } catch (error) {
@@ -93,145 +96,6 @@ const createSipOutboundTrunk = async (req, res) => {
 };
 
 // Make outbound call
-// const makeOutboundCall = async (req, res) => {
-//   try {
-//     const {
-//       trunkId,
-//       phoneNumber,
-//       roomName,
-//       dtmf,
-//       type = "outbound",
-//       serviceProvider,
-//       clientName ,
-//     } = req.body;
-
-//     const metadata = {
-//       type,
-//       serviceProvider, //organisation-name
-//       clientName,
-//     };
-
-//     // Create or update room with proper error handling
-//     try {
-//       await roomService.createRoom({
-//         name: roomName,
-//         metadata: JSON.stringify(metadata),
-//       });
-//     } catch (error) {
-//       if (error.code === 6) {
-//         // ALREADY_EXISTS
-//         await roomService.updateRoomMetadata(
-//           roomName,
-//           JSON.stringify(metadata)
-//         );
-//       } else {
-//         throw error;
-//       }
-//     }
-
-//     // Start recording before creating SIP participant
-//     const recording = await startRecording(roomName);
-//     metadata.recordingId = recording.egressId;
-
-//     const sipParticipantOptions = {
-//       participantIdentity: `sip-${Date.now()}`,
-//       participantName: "Outbound Call",
-//       playDialtone: true,
-//     };
-
-//     if (dtmf) {
-//       sipParticipantOptions.dtmf = dtmf;
-//     }
-
-//     const participant = await sipClient.createSipParticipant(
-//       trunkId,
-//       phoneNumber,
-//       roomName,
-//       sipParticipantOptions
-//     );
-
-//     res.status(201).json({
-//       participant,
-//       settings: metadata,
-//       recordingId: recording.egressId,
-//     });
-//   } catch (error) {
-//     console.error("Failed to initiate call:", error);
-//     res.status(500).json({ error: "Failed to initiate call" });
-//   }
-// };
-
-// const makeOutboundCall = async (req, res) => {
-//   try {
-//     const {
-//       trunkId,
-//       phoneNumber,
-//       roomName,
-//       dtmf,
-//       type = "outbound",
-//       serviceProvider,
-//       clientName,
-//       transferTo, // New parameter for transfer number
-//       transferContext // New parameter for transfer context
-//     } = req.body;
-
-//     const metadata = {
-//       type,
-//       serviceProvider,
-//       clientName,
-//       transferTo, // Add transfer number to metadata
-//       transferContext // Add transfer context to metadata
-//     };
-
-//     // Create or update room with proper error handling
-//     try {
-//       await roomService.createRoom({
-//         name: roomName,
-//         metadata: JSON.stringify(metadata),
-//       });
-//     } catch (error) {
-//       if (error.code === 6) {
-//         // ALREADY_EXISTS
-//         await roomService.updateRoomMetadata(
-//           roomName,
-//           JSON.stringify(metadata)
-//         );
-//       } else {
-//         throw error;
-//       }
-//     }
-
-//     // Start recording before creating SIP participant
-//     const recording = await startRecording(roomName);
-//     metadata.recordingId = recording.egressId;
-
-//     const sipParticipantOptions = {
-//       participantIdentity: `sip-${Date.now()}`,
-//       participantName: "Outbound Call",
-//       playDialtone: true,
-//     };
-
-//     if (dtmf) {
-//       sipParticipantOptions.dtmf = dtmf;
-//     }
-
-//     const participant = await sipClient.createSipParticipant(
-//       trunkId,
-//       phoneNumber,
-//       roomName,
-//       sipParticipantOptions
-//     );
-
-//     res.status(201).json({
-//       participant,
-//       settings: metadata,
-//       recordingId: recording.egressId,
-//     });
-//   } catch (error) {
-//     console.error("Failed to initiate call:", error);
-//     res.status(500).json({ error: "Failed to initiate call" });
-//   }
-// };
 const makeOutboundCall = async (req, res) => {
   try {
     const { trunkId, phoneNumber, roomName, dtmf, type = "outbound", 
@@ -256,7 +120,7 @@ const makeOutboundCall = async (req, res) => {
       })(),
       
       sipClient.createSipParticipant(
-        trunkId,
+        "ST_fdKg8t7ebHpx",
         phoneNumber,
         roomName,
         {
@@ -269,12 +133,12 @@ const makeOutboundCall = async (req, res) => {
     ]);
     
     // Start recording after call is connected to avoid delaying connection
-    const recordingPromise = startRecording(roomName).then(recording => {
-      // Update metadata with recording ID
-      metadata.recordingId = recording.egressId;
-      return roomService.updateRoomMetadata(roomName, JSON.stringify(metadata))
-        .then(() => recording);
-    });
+    // const recordingPromise = startRecording(roomName).then(recording => {
+    //   // Update metadata with recording ID
+    //   metadata.recordingId = recording.egressId;
+    //   return roomService.updateRoomMetadata(roomName, JSON.stringify(metadata))
+    //     .then(() => recording);
+    // });
     
     res.status(201).json({
       participant,
@@ -283,7 +147,7 @@ const makeOutboundCall = async (req, res) => {
     });
     
     // Let recording complete in background
-    await recordingPromise;
+    // await recordingPromise;
   } catch (error) {
     console.error("Failed to initiate call:", error);
     res.status(500).json({ error: "Failed to initiate call" });
@@ -293,9 +157,9 @@ const makeOutboundCall = async (req, res) => {
 // Get all recordings for a room
 const listRecordings = async (req, res) => {
   try {
-    const { roomName } = req.params;
+    const { egressId } = req.params;
     const recordings = await egressClient.listEgress({
-      roomName: roomName,
+      egressId: egressId,
     });
     res.json(recordings);
   } catch (error) {

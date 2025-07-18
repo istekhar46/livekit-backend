@@ -16,7 +16,7 @@ app.use(cors());
 
 app.use(sipRouter);
 app.use("/", authRouter);
-app.use("/", testAgentRouter);
+app.use("/api/", testAgentRouter);
 
 // Start the server
 app.listen(PORT, () => {

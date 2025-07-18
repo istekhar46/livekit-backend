@@ -1,4 +1,5 @@
 import { SipClient } from "livekit-server-sdk";
+import { RoomConfiguration, RoomAgentDispatch } from "@livekit/protocol";
 
 const sipClient = new SipClient(
   process.env.LIVEKIT_URL,
@@ -58,20 +59,43 @@ const createAgent = async (req, res) => {
     }
 
     // If trunk doesn't exist, create new trunk
+
     try {
-      const trunk = await sipClient.createSipInboundTrunk(
-        `trunk-${cleanPhoneNumber}`,
-        ["+19783213318"],
-        {
-          auth_username: authUsername,
-          auth_password: authPassword,
-        }
+      // SIP address is the hostname or IP the SIP INVITE is sent to.
+      // Address format for Twilio: <trunk-name>.pstn.twilio.com
+      // Address format for Telnyx: sip.telnyx.com
+      const address = "livekit-ri.pstn.twilio.com";
+
+      // An array of one or more provider phone numbers associated with the trunk.
+      const numbers = ["+19783213318"];
+
+      // Trunk options
+      const trunkOptions = {
+        auth_username: authUsername,
+        auth_password: authPassword,
+      };
+
+      const trunk = sipClient.createSipOutboundTrunk(
+        "My trunk",
+        address,
+        numbers,
+        trunkOptions
       );
+
+      // const trunk = await sipClient.createSipInboundTrunk(
+      //   `trunk-${cleanPhoneNumber}`,
+      //   ["+19783213318"],
+      //   {
+      //     auth_username: authUsername,
+      //     auth_password: authPassword,
+      //   }
+      // );
 
       console.log("Trunk created successfully:", trunk);
 
       const dispatchRuleOptions = {
         name: `rule-${cleanPhoneNumber}`,
+        metaData: "Test Meta data",
         trunkIds: [trunk.sipTrunkId],
         hidePhoneNumber: false,
       };
@@ -140,8 +164,27 @@ const createInboundTrunk = async (req, res) => {
       numbers,
       trunkOptions
     );
+    const rule = {
+      roomPrefix: "call-",
+      type: "individual",
+    };
+    const options = {
+      name: "my dispatch rule",
+      roomConfig: new RoomConfiguration({
+        agents: [
+          new RoomAgentDispatch({
+            agentName: "inbound-agent",
+            metadata: "dispatch metadata",
+          }),
+        ],
+      }),
+    };
+    const dispatchRule = await sipClient.createSipDispatchRule(rule, options);
 
-    res.status(201).json(trunk);
+    res.status(201).json({
+      trunk: trunk,
+      dispatchRule: dispatchRule,
+    });
   } catch (error) {
     console.error("Failed to create trunk:", error);
     res.status(500).json({ error: "Failed to create trunk" });
@@ -165,4 +208,122 @@ const listAllInboundTrunks = async (req, res) => {
   }
 };
 
-export { createAgent, createInboundTrunk, listAllInboundTrunks };
+const deleteInboundTrunk = async (req, res) => {
+  try {
+    const { trunkId } = req.params;
+
+    const res = await sipClient.deleteSipTrunk(trunkId);
+
+    res.status(200).json({ message: "Trunk deleted successfully", res });
+  } catch (error) {
+    console.error("Failed to delete trunk:", error);
+    res.status(500).json({ error: "Failed to delete trunk" });
+  }
+};
+
+/**
+ * Create a SIP dispatch rule
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+const createDispatchRule = async (req, res) => {
+  try {
+    const {
+      name,
+      ruleType,
+      roomPrefix,
+      pin,
+      trunkIds,
+      hidePhoneNumber,
+      metaData,
+      roomConfig,
+      agentName,
+      agentMetadata
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !ruleType) {
+      return res.status(400).json({
+        error: "Missing required fields: name and ruleType are required",
+      });
+    }
+
+    // Validate ruleType
+    if (!["individual", "direct"].includes(ruleType)) {
+      return res.status(400).json({
+        error: "Invalid ruleType. Must be 'individual' or 'direct'",
+      });
+    }
+
+    // Build rule configuration
+    const rule = {
+      type: ruleType,
+    };
+
+    // Add optional rule properties
+    if (roomPrefix) {
+      rule.roomPrefix = roomPrefix;
+    }
+    if (pin !== undefined) {
+      rule.pin = pin;
+    }
+
+    // Build dispatch rule options
+    const dispatchRuleOptions = {
+      name: name,
+    };
+
+    // Add optional dispatch rule properties
+    if (metaData) {
+      dispatchRuleOptions.metaData = metaData;
+    }
+    if (trunkIds && Array.isArray(trunkIds)) {
+      dispatchRuleOptions.trunkIds = trunkIds;
+    }
+    if (hidePhoneNumber !== undefined) {
+      dispatchRuleOptions.hidePhoneNumber = hidePhoneNumber;
+    }
+
+    // Handle room configuration if provided
+    if (roomConfig || agentName) {
+      if (agentName) {
+        // Create room configuration with agent dispatch
+        dispatchRuleOptions.roomConfig = new RoomConfiguration({
+          agents: [
+            new RoomAgentDispatch({
+              agentName: agentName,
+              metadata: agentMetadata || "dispatch metadata",
+            }),
+          ],
+        });
+      } else if (roomConfig) {
+        // Use provided room configuration
+        dispatchRuleOptions.roomConfig = roomConfig;
+      }
+    }
+
+    // Create the dispatch rule
+    const dispatchRule = await sipClient.createSipDispatchRule(
+      rule,
+      dispatchRuleOptions
+    );
+
+    console.log("Dispatch rule created successfully:", dispatchRule);
+
+    // Return success response
+    res.status(201).json({
+      success: true,
+      dispatchRule: dispatchRule,
+      message: "Dispatch rule created successfully",
+    });
+
+  } catch (error) {
+    console.error("Error creating dispatch rule:", error);
+    res.status(500).json({
+      error: "Failed to create dispatch rule",
+      message: error.message,
+    });
+  }
+};
+
+export { createAgent, createInboundTrunk, listAllInboundTrunks, deleteInboundTrunk, createDispatchRule };
